@@ -100,12 +100,27 @@ end
 
 template agent6_config_file do
   def template_vars
+    additional_endpoints = {}
+    node['datadog']['extra_endpoints'].each do |_, endpoint|
+      next unless endpoint['enabled']
+      url = if endpoint['url']
+              endpoint['url']
+            else
+              node['datadog']['url']
+            end
+      if additional_endpoints.key?(url)
+        additional_endpoints[url] << endpoint['api_key']
+      else
+        additional_endpoints[url] = [endpoint['api_key']]
+      end
+    end
     {
       agent_config: {
         api_key: Chef::Datadog.api_key(node),
         dd_url: node['datadog']['url'],
         hostname: node['datadog']['hostname'],
-        log_level: node['datadog']['log_level']
+        log_level: node['datadog']['log_level'],
+        additional_endpoints: additional_endpoints
       }
     }
   end
