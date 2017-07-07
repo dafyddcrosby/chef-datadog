@@ -61,6 +61,8 @@ end
 # the node's run_list and set the relevant attributes
 #
 
+# FIXME: with the agent6, we still need the agent5 conf file in /etc/dd-agent/datadog.conf for the trace-agent.
+#        Remove it when the trace-agent can handle datadog.yaml
 template agent_config_file do # rubocop:disable Metrics/BlockLength
   def template_vars # rubocop:disable Metrics/AbcSize
     api_keys = [Chef::Datadog.api_key(node)]
