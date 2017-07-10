@@ -42,9 +42,12 @@ if !dd_agent_version.nil? && dd_agent_version.split('.')[0].split(':').last.to_i
     version dd_agent_version
   end
 elsif node['datadog']['agent6']
-  package 'datadog-agent' do
-    action :remove
+  unless node['datadog']['allow_both_packages']
+    package 'datadog-agent' do
+      action :remove
+    end
   end
+
   package 'datadog-agent6' do
     action :upgrade
   end
@@ -57,8 +60,10 @@ else
   end
 
   # remove the agent6 package
-  package 'datadog-agent6' do
-    action :remove
+  unless node['datadog']['allow_both_packages']
+    package 'datadog-agent6' do
+      action :remove
+    end
   end
 
   package_retries = node['datadog']['agent_package_retries']

@@ -100,44 +100,46 @@ template agent_config_file do # rubocop:disable Metrics/BlockLength
   sensitive true if Chef::Resource.instance_methods(false).include?(:sensitive)
 end
 
-template agent6_config_file do
-  def template_vars
-    additional_endpoints = {}
-    node['datadog']['extra_endpoints'].each do |_, endpoint|
-      next unless endpoint['enabled']
-      url = if endpoint['url']
-              endpoint['url']
-            else
-              node['datadog']['url']
-            end
-      if additional_endpoints.key?(url)
-        additional_endpoints[url] << endpoint['api_key']
-      else
-        additional_endpoints[url] = [endpoint['api_key']]
+if node['datadog']['agent6']
+  template agent6_config_file do
+    def template_vars
+      additional_endpoints = {}
+      node['datadog']['extra_endpoints'].each do |_, endpoint|
+        next unless endpoint['enabled']
+        url = if endpoint['url']
+                endpoint['url']
+              else
+                node['datadog']['url']
+              end
+        if additional_endpoints.key?(url)
+          additional_endpoints[url] << endpoint['api_key']
+        else
+          additional_endpoints[url] = [endpoint['api_key']]
+        end
       end
-    end
-    {
-      agent_config: {
-        api_key: Chef::Datadog.api_key(node),
-        dd_url: node['datadog']['url'],
-        hostname: node['datadog']['hostname'],
-        log_level: node['datadog']['log_level'],
-        additional_endpoints: additional_endpoints
+      {
+        agent_config: {
+          api_key: Chef::Datadog.api_key(node),
+          dd_url: node['datadog']['url'],
+          hostname: node['datadog']['hostname'],
+          log_level: node['datadog']['log_level'],
+          additional_endpoints: additional_endpoints
+        }
       }
-    }
-  end
-
-  owner 'dd-agent'
-  group 'dd-agent'
-  mode '640'
-  variables(
-    if respond_to?(:lazy)
-      lazy { template_vars }
-    else
-      template_vars
     end
-  )
-  sensitive true if Chef::Resource.instance_methods(false).include?(:sensitive)
+
+    owner 'dd-agent'
+    group 'dd-agent'
+    mode '640'
+    variables(
+      if respond_to?(:lazy)
+        lazy { template_vars }
+      else
+        template_vars
+      end
+    )
+    sensitive true if Chef::Resource.instance_methods(false).include?(:sensitive)
+  end
 end
 
 agent_service_name = node['datadog']['agent6'] ? "datadog-agent6" : node['datadog']['agent_name']
